@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NRV Player</title>
+    <style>
+      /* Basic Reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Body Styles */
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #4dabf7;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+        font-weight: 600;
+        text-align: center;
+        text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Form Container Styling */
+      .form-container {
+        background-color: #1f1f1f;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 40px;
+        transition: transform 0.3s ease;
+      }
+
+      .form-container:hover {
+        transform: scale(1.02);
+      }
+
+      .form-container label {
+        font-size: 16px;
+        margin-bottom: 10px;
+        display: block;
+        color: #ddd;
+      }
+
+      .form-container input,
+      .form-container select {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #444;
+        border-radius: 8px;
+        font-size: 16px;
+        color: #e0e0e0;
+        background-color: #333;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+      }
+
+      .form-container input:focus,
+      .form-container select:focus {
+        border-color: #4dabf7;
+        outline: none;
+        background-color: #444;
+      }
+
+      .form-container button {
+        background-color: #4dabf7;
+        color: #121212;
+        border: none;
+        padding: 14px 24px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .form-container button:hover {
+        background-color: #3a90c2;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Season and Episode Inputs (only visible for TV Shows) */
+      #seasonEpisodeFields {
+        display: none;
+      }
+
+      /* Radio Button Group */
+      .radio-group {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        background-color: #2c2c2c;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #e0e0e0;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+        flex: 1; /* Ensure labels take equal space */
+        text-align: center;
+      }
+
+      .radio-group label:hover {
+        background-color: #4dabf7;
+      }
+
+      .radio-group input[type='radio'] {
+        display: none;
+      }
+
+      .radio-group input[type='radio']:checked + label {
+        background-color: #4dabf7;
+        color: #121212;
+        font-weight: bold;
+      }
+
+      /* Iframe Container Styling */
+      #iframe-container {
+        width: 100%;
+        max-width: 1000px;
+        background-color: #1f1f1f;
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+        margin-top: 20px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 500px;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NRV Player</h1>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Manual IMDb Code Input -->
+      <div>
+        <label for="imdbCode">Enter IMDb Code:</label>
+        <input type="text" id="imdbCode" placeholder="Enter IMDb code" />
+      </div>
+
+      <!-- Select whether it's a movie or TV show -->
+      <div class="radio-group">
+        <input
+          type="radio"
+          name="type"
+          value="movie"
+          id="movie"
+          checked
+          onchange="toggleSeasonEpisodeFields()"
+        />
+        <label for="movie">Movie</label>
+
+        <input
+          type="radio"
+          name="type"
+          value="tvshow"
+          id="tvshow"
+          onchange="toggleSeasonEpisodeFields()"
+        />
+        <label for="tvshow">TV Show</label>
+      </div>
+
+      <!-- Season and Episode Inputs (only visible for TV Shows) -->
+      <div id="seasonEpisodeFields">
+        <div>
+          <label for="season">Enter Season:</label>
+          <input type="text" id="season" value="1" />
+        </div>
+        <div>
+          <label for="episode">Enter Episode:</label>
+          <input type="text" id="episode" value="1" />
+        </div>
+      </div>
+
+      <!-- Select which link to load -->
+      <div class="radio-group">
+        <input
+          type="radio"
+          name="source"
+          value="2embed"
+          id="source2embed"
+          checked
+        />
+        <label for="source2embed">2Embed</label>
+
+        <input
+          type="radio"
+          name="source"
+          value="primewire"
+          id="sourceprimewire"
+        />
+        <label for="sourceprimewire">Primewire</label>
+
+        <input type="radio" name="source" value="vidsrc" id="sourcevidsrc" />
+        <label for="sourcevidsrc">Vidsrc</label>
+      </div>
+
+      <button onclick="updateIframe()">Watch</button>
+    </div>
+
+    <!-- Iframe Container -->
+    <div id="iframe-container">
+      <iframe
+        id="dynamicIframe"
+        frameborder="0"
+        scrolling="no"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <script>
+      // Function to toggle season and episode fields based on selected type
+      function toggleSeasonEpisodeFields() {
+        const isTVShow =
+          document.querySelector('input[name="type"]:checked').value ===
+          'tvshow';
+        document.getElementById('seasonEpisodeFields').style.display = isTVShow
+          ? 'block'
+          : 'none';
+      }
+
+      // Function to update the iframe source based on user inputs and selected source
+      function updateIframe() {
+        const imdbCode = document.getElementById('imdbCode').value.trim();
+        const season = document.getElementById('season').value;
+        const episode = document.getElementById('episode').value;
+        const selectedSource = document.querySelector(
+          'input[name="source"]:checked'
+        ).value;
+
+        if (!imdbCode) {
+          alert('Please enter an IMDb code.');
+          return;
+        }
+
+        let iframeSrc = '';
+
+        // Build the iframe source based on type and selected source
+        const isMovie =
+          document.querySelector('input[name="type"]:checked').value ===
+          'movie';
+
+        if (isMovie) {
+          if (selectedSource === '2embed') {
+            iframeSrc = `https://www.2embed.skin/embedtv/${imdbCode}`;
+          } else if (selectedSource === 'primewire') {
+            iframeSrc = `https://primewire.tf/embed/movie?imdb=${imdbCode}`;
+          } else if (selectedSource === 'vidsrc') {
+            iframeSrc = `https://vidsrc.net/embed/movie?imdb=${imdbCode}`;
+          }
+        } else {
+          // TV Show Sources
+          if (selectedSource === '2embed') {
+            iframeSrc = `https://www.2embed.skin/embedtv/${imdbCode}&s=${season}&e=${episode}`;
+          } else if (selectedSource === 'primewire') {
+            iframeSrc = `https://primewire.tf/embed/tv?imdb=${imdbCode}&s=${season}&e=${episode}`;
+          } else if (selectedSource === 'vidsrc') {
+            iframeSrc = `https://vidsrc.net/embed/tv?imdb=${imdbCode}&s=${season}&e=${episode}`;
+          }
+        }
+
+        document.getElementById('dynamicIframe').src = iframeSrc;
+      }
+    </script>
+  </body>
+</html>
