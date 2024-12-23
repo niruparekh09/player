@@ -24,6 +24,7 @@
         justify-content: flex-start;
         min-height: 100vh;
         padding: 20px;
+        overscroll-behavior: none;
       }
 
       h1 {
@@ -33,6 +34,29 @@
         font-weight: 600;
         text-align: center;
         text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+      }
+
+      #toggleButton {
+        background-color: transparent;
+        color: rgba(255, 255, 255, 0.8); /* Subtle white text */
+        border: 2px solid rgba(255, 255, 255, 0.6); /* Transparent white border */
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease, transform 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+      }
+
+      #toggleButton:hover {
+        background-color: rgba(255, 255, 255, 0.1); /* Light overlay on hover */
+        color: #ffffff; /* Brighter text on hover */
+        border-color: rgba(255, 255, 255, 0.9); /* Highlight border */
+        transform: scale(1.05); /* Slight zoom */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Deeper shadow on hover */
       }
 
       /* Form Container Styling */
@@ -181,17 +205,22 @@
         #iframe-container {
           height: auto; /* Ensure the iframe container adjusts height on small screens */
         }
+      }
     </style>
   </head>
   <body>
     <h1>NRV Player</h1>
-
+    <button id="toggleButton" onclick="toggleForm()">Minimize</button>
     <!-- Form Container -->
-    <div class="form-container">
+    <div class="form-container" id="formContainer">
       <!-- Manual IMDb Code Input -->
       <div>
         <label for="imdbCode">Enter IMDb Code:</label>
-        <input type="text" id="imdbCode" placeholder="Enter IMDb code" />
+        <input
+          type="text"
+          id="imdbCode"
+          placeholder="Enter IMDb or TMDB code"
+        />
       </div>
 
       <!-- Select whether it's a movie or TV show -->
@@ -201,7 +230,6 @@
           name="type"
           value="movie"
           id="movie"
-          checked
           onchange="toggleSeasonEpisodeFields()"
         />
         <label for="movie">Movie</label>
@@ -249,6 +277,14 @@
 
         <input type="radio" name="source" value="vidsrc" id="sourcevidsrc" />
         <label for="sourcevidsrc">Vidsrc</label>
+
+        <input type="radio" name="source" value="ythhd" id="sourceythhd" />
+        <label for="sourceythhd">YTHD</label>
+
+        <input type="radio" name="source" value="vidlink" id="sourcevidlink" />
+        <label for="sourcevidlink" onclick="showVidlinkDisclaimer()"
+          >Vidlink</label
+        >
       </div>
 
       <button onclick="updateIframe()">Watch</button>
@@ -265,6 +301,49 @@
     </div>
 
     <script>
+      // Save form data to localStorage
+      function saveToLocalStorage() {
+        const imdbCode = document.getElementById('imdbCode').value.trim();
+        const season = document.getElementById('season').value;
+        const episode = document.getElementById('episode').value;
+        const selectedSource = document.querySelector(
+          'input[name="source"]:checked'
+        ).value;
+        const type = document.querySelector('input[name="type"]:checked').value;
+
+        localStorage.setItem('imdbCode', imdbCode);
+        localStorage.setItem('season', season);
+        localStorage.setItem('episode', episode);
+        localStorage.setItem('selectedSource', selectedSource);
+        localStorage.setItem('type', type);
+      }
+
+      // Load form data from localStorage
+      function loadFromLocalStorage() {
+        const imdbCode = localStorage.getItem('imdbCode');
+        const season = localStorage.getItem('season');
+        const episode = localStorage.getItem('episode');
+        const selectedSource = localStorage.getItem('selectedSource');
+        const type = localStorage.getItem('type');
+
+        if (imdbCode) document.getElementById('imdbCode').value = imdbCode;
+        if (season) document.getElementById('season').value = season;
+        if (episode) document.getElementById('episode').value = episode;
+
+        if (selectedSource) {
+          document.querySelector(
+            `input[name="source"][value="${selectedSource}"]`
+          ).checked = true;
+        }
+
+        if (type) {
+          document.querySelector(
+            `input[name="type"][value="${type}"]`
+          ).checked = true;
+          toggleSeasonEpisodeFields(); // Ensure season/episode fields are visible based on type
+        }
+      }
+
       // Function to toggle season and episode fields based on selected type
       function toggleSeasonEpisodeFields() {
         const isTVShow =
@@ -273,6 +352,11 @@
         document.getElementById('seasonEpisodeFields').style.display = isTVShow
           ? 'block'
           : 'none';
+      }
+
+      // Function to show a disclaimer for Vidlink
+      function showVidlinkDisclaimer() {
+        alert('Vidlink requires TMDB codes instead of IMDb codes.');
       }
 
       // Function to update the iframe source based on user inputs and selected source
@@ -285,7 +369,7 @@
         ).value;
 
         if (!imdbCode) {
-          alert('Please enter an IMDb code.');
+          alert('Please enter an IMDb or TMDB code.');
           return;
         }
 
@@ -303,6 +387,10 @@
             iframeSrc = `https://primewire.tf/embed/movie?imdb=${imdbCode}`;
           } else if (selectedSource === 'vidsrc') {
             iframeSrc = `https://vidsrc.net/embed/movie?imdb=${imdbCode}`;
+          } else if (selectedSource === 'ythhd') {
+            iframeSrc = `https://ythd.org/embed/${imdbCode}/`;
+          } else if (selectedSource === 'vidlink') {
+            iframeSrc = `https://vidlink.pro/movie/${imdbCode}`;
           }
         } else {
           // TV Show Sources
@@ -312,11 +400,21 @@
             iframeSrc = `https://primewire.tf/embed/tv?imdb=${imdbCode}&season=${season}&episode=${episode}`;
           } else if (selectedSource === 'vidsrc') {
             iframeSrc = `https://vidsrc.net/embed/tv?imdb=${imdbCode}&s=${season}&e=${episode}`;
+          } else if (selectedSource === 'ythhd') {
+            iframeSrc = `https://ythd.org/embed/${imdbCode}/${season}-${episode}/`;
+          } else if (selectedSource === 'vidlink') {
+            iframeSrc = `https://vidlink.pro/tv/${imdbCode}/${season}/${episode}`;
           }
         }
 
         document.getElementById('dynamicIframe').src = iframeSrc;
+
+        // Save form data to localStorage after updating iframe
+        saveToLocalStorage();
       }
+
+      // Load data from localStorage when the page is loaded
+      window.onload = loadFromLocalStorage;
     </script>
   </body>
 </html>
